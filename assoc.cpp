@@ -383,7 +383,7 @@ namespace
                     auto v = subset(e, idx);
                     xv.insert(xv.end(), v.begin(), v.end());
                 }
-                ols.fit(q0, yv, xv, jdfe0, jsse0);
+                ols.fit(q0, xv, yv, jdfe0, jsse0);
             }
             else {
                 yv = y;
