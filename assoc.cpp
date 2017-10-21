@@ -765,7 +765,7 @@ namespace
 
 int assoc(int argc, char *argv[])
 {
-    std::cerr << "assoc (Built on " __DATE__ " " __TIME__ ")\n";
+    std::cerr << "ASSOC (Built on " __DATE__ " " __TIME__ ")\n";
 
     CmdLine cmd("assoc [options]");
 
