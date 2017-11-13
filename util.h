@@ -69,6 +69,19 @@ std::vector<T1> subset(const std::vector<T1> &v, const std::vector<T2> &idx)
 }
 
 template<typename T>
+std::vector<T> subset(const std::vector<T> &v, const std::vector<bool> &mask)
+{
+    std::vector<T> z;
+    z.reserve(std::count(mask.begin(), mask.end(), true));
+    size_t n = v.size();
+    for (size_t i = 0; i < n; ++i) {
+        if (mask[i])
+            z.push_back(v[i]);
+    }
+    return z;
+}
+
+template<typename T>
 std::vector<T> intersect(std::vector<T> a, std::vector<T> b)
 {
     std::sort(a.begin(), a.end());
