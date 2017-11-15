@@ -901,7 +901,7 @@ int assoc(int argc, char *argv[])
 
         if (par.preselect > 0.0 && par.preselect < 1.0) {
             std::vector<double> p2;
-            glm(haploid, gt.dat, gi2, y, ac, ic, p1, p2);
+            glm(haploid, gt.dat, gi2, y, ac2, ic2, p1, p2);
 
             std::vector<int> idx;
             for (int j = 0; j < m; ++j) {
@@ -912,14 +912,14 @@ int assoc(int argc, char *argv[])
             if (!idx.empty()) {
                 std::cerr << "INFO: after pre-selection, there are " << idx.size() << " loci\n";
                 auto geno = subset(gt.dat, idx);
-                stepwise(haploid, geno, gi2, y, ac, ic, p2, loci);
+                stepwise(haploid, geno, gi2, y, ac2, ic2, p2, loci);
                 subset(idx, loci).swap(loci);
                 for (size_t k = 0; k < idx.size(); ++k)
                     p1[idx[k]] = p2[k];
             }
         }
         else
-            stepwise(haploid, gt.dat, gi2, y, ac, ic, p1, loci);
+            stepwise(haploid, gt.dat, gi2, y, ac2, ic2, p1, loci);
 
         ps.push_back(p1);
 

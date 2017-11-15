@@ -221,7 +221,7 @@ ANOVA::Table ANOVA::solve3(const std::vector<double> &y) const
         }
 
         double dfe0, sse0;
-        ols.fit(q1, x, y, dfe0, sse0);
+        ols.fit(q0, x, y, dfe0, sse0);
 
         tab.names.push_back(curr->name);
         tab.df.push_back(dfe0 - dfe);
