@@ -201,8 +201,20 @@ ANOVA::Table ANOVA::solve3(const std::vector<double> &y) const
             x.insert(x.end(), e.begin(), e.end());
     }
 
+    std::vector<double> zt;
+    int pos = 1, nz = 0;
+    for (auto &tm : tms_) {
+        for (auto &e : tm->constr) {
+            std::vector<double> v(q1, 0);
+            std::copy(e.begin(), e.end(), v.begin() + pos);
+            zt.insert(zt.end(), v.begin(), v.end());
+            nz += 1;
+        }
+        pos += tm->data.size();
+    }
+
     double dfe, sse;
-    ols.fit(q1, x, y, dfe, sse);
+    ols.fit(q1, nz, x, y, zt, dfe, sse);
 
     tab.error.push_back(dfe);
     tab.error.push_back(sse);
@@ -220,8 +232,22 @@ ANOVA::Table ANOVA::solve3(const std::vector<double> &y) const
                 x.insert(x.end(), e.begin(), e.end());
         }
 
+        zt.clear();
+        pos = 1, nz = 0;
+        for (auto &tm : tms_) {
+            if (&tm == &curr)
+                continue;
+            for (auto &e : tm->constr) {
+                std::vector<double> v(q0, 0);
+                std::copy(e.begin(), e.end(), v.begin() + pos);
+                zt.insert(zt.end(), v.begin(), v.end());
+                nz += 1;
+            }
+            pos += tm->data.size();
+        }
+
         double dfe0, sse0;
-        ols.fit(q0, x, y, dfe0, sse0);
+        ols.fit(q0, nz, x, y, zt, dfe0, sse0);
 
         tab.names.push_back(curr->name);
         tab.df.push_back(dfe0 - dfe);
