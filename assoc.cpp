@@ -25,7 +25,7 @@ namespace
         std::string pheno;
         std::string covar;
         std::string out;
-        double rsq = 0.99;
+        double rsq = 0.95;
         double alpha = 0.05;
         double preselect = 0.05;
         int mtc = 0;
