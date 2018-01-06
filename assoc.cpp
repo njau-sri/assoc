@@ -29,7 +29,6 @@ namespace
         double alpha = 0.05;
         double preselect = 0.05;
         int mtc = 0;
-        int sstype = 1;
         bool nogxe = false;
     };
 
@@ -658,7 +657,8 @@ namespace
         return 0;
     }
 
-    int fit_model(int t, const std::vector<int> &loci, const Genotype &gt, const std::vector<int> &gi, const Phenotype &pt, const Covariate &ct, std::string &stab, std::string &sest)
+    int fit_model(int t, const std::vector<int> &loci, const Genotype &gt, const std::vector<int> &gi, const Phenotype &pt, const Covariate &ct,
+        std::string &est, std::string &aov1, std::string &aov3)
     {
         auto y = pt.dat[t];
         int n = y.size();
@@ -735,28 +735,43 @@ namespace
                 aov.add_crossed(gt.loc[j] + "*_ENV_", gs, env);
         }
 
-        auto tab = par.sstype == 1 ? aov.solve1(y) : aov.solve3(y);
-        auto est = aov.solution(y);
+        auto sol = aov.solution(y);
+        auto at1 = aov.solve1(y);
+        auto at3 = aov.solve3(y);
 
-        for (auto &e : tab.p) {
+        for (auto &e : at1.p) {
             if (e == 0.0)
                 e = std::numeric_limits<double>::min();
         }
 
-        std::ostringstream otab;
-        otab << "Source\tDF\tSS\tMS\tF\tp\n";
-        for (size_t m = tab.names.size(), i = 0; i < m; ++i)
-            otab << tab.names[i] << "\t" << tab.df[i] << "\t" << tab.ss[i] << "\t"
-            << tab.ms[i] << "\t" << tab.f[i] << "\t" << tab.p[i] << "\n";
-        otab << "Error\t" << tab.error[0] << "\t" << tab.error[1] << "\t" << tab.error[2] << "\n";
-        otab << "Total\t" << tab.total[0] << "\t" << tab.total[1] << "\n";
-        stab = otab.str();
+        for (auto &e : at3.p) {
+            if (e == 0.0)
+                e = std::numeric_limits<double>::min();
+        }
 
-        std::ostringstream oest;
-        oest << "Parameter\tEstimate\n";
-        for (size_t m = est.params.size(), i = 0; i < m; ++i)
-            oest << est.params[i] << "\t" << est.coeffs[i] << "\n";
-        sest = oest.str();
+        std::ostringstream oss1;
+        oss1 << "Parameter\tEstimate\n";
+        for (size_t m = sol.params.size(), i = 0; i < m; ++i)
+            oss1 << sol.params[i] << "\t" << sol.coeffs[i] << "\n";
+        est = oss1.str();
+
+        std::ostringstream oss2;
+        oss2 << "Source\tDF\tSS\tMS\tF\tp\n";
+        for (size_t m = at1.names.size(), i = 0; i < m; ++i)
+            oss2 << at1.names[i] << "\t" << at1.df[i] << "\t" << at1.ss[i] << "\t"
+            << at1.ms[i] << "\t" << at1.f[i] << "\t" << at1.p[i] << "\n";
+        oss2 << "Error\t" << at1.error[0] << "\t" << at1.error[1] << "\t" << at1.error[2] << "\n";
+        oss2 << "Total\t" << at1.total[0] << "\t" << at1.total[1] << "\n";
+        aov1 = oss2.str();
+
+        std::ostringstream oss3;
+        oss3 << "Source\tDF\tSS\tMS\tF\tp\n";
+        for (size_t m = at3.names.size(), i = 0; i < m; ++i)
+            oss3 << at3.names[i] << "\t" << at3.df[i] << "\t" << at3.ss[i] << "\t"
+            << at3.ms[i] << "\t" << at3.f[i] << "\t" << at3.p[i] << "\n";
+        oss3 << "Error\t" << at3.error[0] << "\t" << at3.error[1] << "\t" << at3.error[2] << "\n";
+        oss3 << "Total\t" << at3.total[0] << "\t" << at3.total[1] << "\n";
+        aov3 = oss3.str();
 
         return 0;
     }
@@ -777,7 +792,6 @@ int assoc(int argc, char *argv[])
     cmd.add("--preselect", "pre-selection threshold", "0.05");
     cmd.add("--mtc", "multiple testing correction, BON/FDR", "");
     cmd.add("--rsq", "maximum model r-square", "0.99");
-    cmd.add("--sstype", "sum of squares type", "1");
 
     cmd.add("--no-gxe", "ignore GxE interaction effect");
 
@@ -795,7 +809,6 @@ int assoc(int argc, char *argv[])
     par.alpha = std::stod(cmd.get("--alpha"));
     par.preselect = std::stod(cmd.get("--preselect"));
     par.rsq = std::stod(cmd.get("--rsq"));
-    par.sstype = std::stoi(cmd.get("--sstype"));
 
     par.nogxe = cmd.has("--no-gxe");
 
@@ -858,15 +871,21 @@ int assoc(int argc, char *argv[])
         return 1;
     }
 
-    std::ofstream ofs_aov(par.out + ".aov");
-    if (!ofs_aov) {
-        std::cerr << "ERROR: can't open file: " << par.out << ".aov" << "\n";
-        return 1;
-    }
-
     std::ofstream ofs_est(par.out + ".est");
     if (!ofs_est) {
         std::cerr << "ERROR: can't open file: " << par.out << ".est" << "\n";
+        return 1;
+    }
+
+    std::ofstream ofs_aov1(par.out + ".aov1");
+    if (!ofs_aov1) {
+        std::cerr << "ERROR: can't open file: " << par.out << ".aov1" << "\n";
+        return 1;
+    }
+
+    std::ofstream ofs_aov3(par.out + ".aov3");
+    if (!ofs_aov3) {
+        std::cerr << "ERROR: can't open file: " << par.out << ".aov3" << "\n";
         return 1;
     }
 
@@ -928,11 +947,12 @@ int assoc(int argc, char *argv[])
             ofs_loc << gt.loc[j] << "\n";
         ofs_loc << "\n";
 
-        std::string tab, est;
-        auto s = fit_model(t, loci, gt, gi, pt, ct, tab, est);
+        std::string est, aov1, aov3;
+        fit_model(t, loci, gt, gi, pt, ct, est, aov1, aov3);
 
-        ofs_aov << ">" << pt.phe[t] << "\n" << tab << "\n";
         ofs_est << ">" << pt.phe[t] << "\n" << est << "\n";
+        ofs_aov1 << ">" << pt.phe[t] << "\n" << aov1 << "\n";
+        ofs_aov3 << ">" << pt.phe[t] << "\n" << aov3 << "\n";
     }
 
     std::ofstream ofs_ps(par.out + ".ps");
