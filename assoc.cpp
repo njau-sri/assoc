@@ -791,7 +791,7 @@ int assoc(int argc, char *argv[])
     cmd.add("--alpha", "significance level", "0.05");
     cmd.add("--preselect", "pre-selection threshold", "0.05");
     cmd.add("--mtc", "multiple testing correction, BON/FDR", "");
-    cmd.add("--rsq", "maximum model r-square", "0.99");
+    cmd.add("--rsq", "maximum model r-square", "0.95");
 
     cmd.add("--no-gxe", "ignore GxE interaction effect");
 
