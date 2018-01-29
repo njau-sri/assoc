@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <iterator>
 #include <functional>
 #include "vcfio.h"
 #include "cmdline.h"
@@ -486,6 +487,8 @@ namespace
                     }
                     ps[j] = p;
                 }
+                else
+                    ps[j] = 1.0;
             }
 
             double alpha = par.alpha;
@@ -570,18 +573,19 @@ namespace
                     auto f = ((sse0 - sse1) / (dfe0 - dfe1)) / (sse1 / dfe1);
                     auto p = fpval(f, dfe0 - dfe1, dfe1);
                     px.push_back(p);
-                    ps[i] = p;
                 }
                 else
                     px.push_back(1.0);
             }
 
-            auto itr = std::max_element(px.begin(), px.end());
-            if (*itr <= par.alpha)
+            auto j = std::distance(px.begin(), std::max_element(px.begin(), px.end()));
+            if (px[j] <= par.alpha)
                 break;
 
-            in.erase(in.begin() + (itr - px.begin()));
-            std::cerr << "INFO: backward elimination " << ++step << ": " << *itr << "\n";
+            ps[in[j]] = px[j];
+            in.erase(in.begin() + j);
+
+            std::cerr << "INFO: backward elimination " << j+1 << " " << px[j] << "\n";
         }
     }
 
